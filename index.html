@@ -136,7 +136,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--dark
 .ccbtn:hover{background:rgba(255,255,255,.14);color:var(--white);}
 .ccadd{background:var(--green);border:none;color:var(--dark);font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;padding:7px 13px;border-radius:6px;cursor:pointer;white-space:nowrap;}
 .ccadd:hover{background:#02bb5e;}
-.ccadd.on{background:rgba(255,255,255,.1);color:rgba(255,255,255,.45);cursor:default;}
+.ccadd.on{background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);}
 .ccdots{display:flex;gap:4px;align-items:center;}
 .ccdot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.2);}
 .ccdot.on{background:var(--green);}
@@ -764,7 +764,7 @@ function renderCard(){
   document.getElementById('ccD').textContent=c.desc;
   document.getElementById('ccCtr').textContent=`${ci+1} / ${COMPS.length}`;
   const btn=document.getElementById('ccAddBtn');
-  if(focus.has(c.name)){btn.textContent='✓ In focus';btn.classList.add('on');}
+  if(focus.has(c.name)){btn.textContent='✕ Remove focus';btn.classList.add('on');}
   else{btn.textContent='Add focus';btn.classList.remove('on');}
   const dots=document.getElementById('ccDots');dots.innerHTML='';
   const s=Math.max(0,ci-2),e=Math.min(COMPS.length,s+5);
@@ -774,7 +774,9 @@ function nextC(){ci=(ci+1)%COMPS.length;renderCard();}
 function prevC(){ci=(ci-1+COMPS.length)%COMPS.length;renderCard();}
 function addFocus(){
   const n=COMPS[ci].name;
-  if(!focus.has(n)){focus.add(n);if(!scores[n])scores[n]=2.5;toast(`"${n}" added to focus areas`);renderCard();renderCompGrid();}
+  if(focus.has(n)){focus.delete(n);toast(`"${n}" removed from focus areas`);}
+  else{focus.add(n);if(!scores[n])scores[n]=2.5;toast(`"${n}" added to focus areas`);}
+  renderCard();renderCompGrid();
 }
 
 // Competency grid
@@ -783,8 +785,12 @@ function renderCompGrid(){
   COMPS.forEach(c=>{
     const iF=focus.has(c.name);const sc=scores[c.name]||0;
     const el=document.createElement('div');el.className='cpi'+(iF?' focus':'');
-    el.innerHTML=`<div class="cpif" style="color:${FC[c.factor]||'var(--d60)'};">${c.factor}</div><div class="cpin">${c.name}</div><div class="cpid">${c.desc}</div>${iF?`<div class="cpis"><div class="cpib"><div class="cpibf" style="width:${(sc/5)*100}%"></div></div><div class="cpiv">${sc.toFixed(1)}</div></div><div style="font-size:11px;color:var(--green);font-weight:600;margin-top:6px;">★ Focus area</div>`:`<div style="margin-top:7px;font-size:11px;color:var(--d60);">Tap to add as focus area</div>`}`;
-    el.onclick=()=>{if(!focus.has(c.name)){focus.add(c.name);if(!scores[c.name])scores[c.name]=2.5;toast(`"${c.name}" added to focus areas`);renderCompGrid();}};
+    el.innerHTML=`<div class="cpif" style="color:${FC[c.factor]||'var(--d60)'};">${c.factor}</div><div class="cpin">${c.name}</div><div class="cpid">${c.desc}</div>${iF?`<div class="cpis"><div class="cpib"><div class="cpibf" style="width:${(sc/5)*100}%"></div></div><div class="cpiv">${sc.toFixed(1)}</div></div><div style="font-size:11px;color:var(--green);font-weight:600;margin-top:6px;">★ Focus area · tap to remove</div>`:`<div style="margin-top:7px;font-size:11px;color:var(--d60);">Tap to add as focus area</div>`}`;
+    el.onclick=()=>{
+      if(focus.has(c.name)){focus.delete(c.name);toast(`"${c.name}" removed from focus areas`);}
+      else{focus.add(c.name);if(!scores[c.name])scores[c.name]=2.5;toast(`"${c.name}" added to focus areas`);}
+      renderCompGrid();renderCard();
+    };
     g.appendChild(el);
   });
 }
