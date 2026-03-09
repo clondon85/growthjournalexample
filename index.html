@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Own Your Growth — Adyen</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green: #04D16A;
+  --dark: #001222;
+  --white: #FFFFFF;
+  --surface: #F4F7F9;
+  --border: rgba(0,18,34,0.1);
+  --dark-60: rgba(0,18,34,0.5);
+  --dark-80: rgba(0,18,34,0.08);
+  --green-10: rgba(4,209,106,0.1);
+  --green-20: rgba(4,209,106,0.2);
+  --green-40: rgba(4,209,106,0.4);
+  --radius: 12px;
+  --radius-lg: 20px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'DM Sans',sans-serif; background:var(--surface); color:var(--dark); min-height:100vh; -webkit-font-smoothing:antialiased; }
+
+.sidebar {
+  position:fixed; left:0; top:0; bottom:0; width:240px;
+  background:var(--dark); display:flex; flex-direction:column;
+  padding:32px 0; z-index:100;
+}
+.sidebar-logo { padding:0 28px 32px; border-bottom:1px solid rgba(255,255,255,0.08); margin-bottom:24px; }
+.logo-wordmark { font-size:26px; font-weight:700; color:var(--green); letter-spacing:-0.02em; }
+.logo-sub { font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:rgba(255,255,255,0.25); margin-top:2px; }
+.sidebar-label { font-size:10px; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; color:rgba(255,255,255,0.3); padding:0 28px; margin-bottom:8px; }
+.nav-item { display:flex; align-items:center; gap:12px; padding:11px 28px; color:rgba(255,255,255,0.45); font-size:13.5px; cursor:pointer; transition:all 0.15s; border-left:2px solid transparent; }
+.nav-item:hover { color:rgba(255,255,255,0.8); background:rgba(255,255,255,0.04); }
+.nav-item.active { color:var(--green); border-left-color:var(--green); background:rgba(4,209,106,0.07); }
+.nav-icon { width:15px; height:15px; flex-shrink:0; }
+.nav-divider { height:1px; background:rgba(255,255,255,0.06); margin:16px 0 12px; }
+.sidebar-bottom { margin-top:auto; padding:20px 28px 0; border-top:1px solid rgba(255,255,255,0.07); }
+.avatar { width:34px; height:34px; border-radius:50%; background:var(--green-20); border:1.5px solid var(--green-40); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; color:var(--green); flex-shrink:0; }
+.user-chip { display:flex; align-items:center; gap:12px; }
+.user-name { font-size:13px; font-weight:500; color:var(--white); }
+.user-role { font-size:11px; color:rgba(255,255,255,0.3); margin-top:1px; }
+
+.main { margin-left:240px; padding:36px 44px; min-height:100vh; }
+.view { display:none; }
+.view.active { display:block; animation:fadeUp 0.3s ease both; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+.topbar { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:36px; }
+.topbar-eyebrow { font-size:11px; font-weight:500; letter-spacing:0.1em; text-transform:uppercase; color:var(--green); margin-bottom:5px; }
+.topbar-title { font-size:26px; font-weight:300; letter-spacing:-0.02em; }
+.topbar-title strong { font-weight:600; }
+.topbar-actions { display:flex; gap:10px; align-items:center; padding-top:4px; }
+.btn { display:inline-flex; align-items:center; gap:7px; padding:9px 16px; border-radius:8px; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500; cursor:pointer; border:none; transition:all 0.15s; }
+.btn-primary { background:var(--green); color:var(--dark); }
+.btn-primary:hover { background:#02bb5e; }
+.btn-ghost { background:transparent; color:var(--dark-60); border:1px solid var(--border); }
+.btn-ghost:hover { background:var(--white); color:var(--dark); }
+
+.stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:28px; }
+.stat-card { background:var(--white); border-radius:var(--radius); padding:22px; border:1px solid var(--border); transition:transform 0.15s,box-shadow 0.15s; position:relative; overflow:hidden; }
+.stat-card:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,18,34,0.07); }
+.stat-card::after { content:''; position:absolute; bottom:0; left:0; right:0; height:3px; background:var(--green); opacity:0; transition:opacity 0.15s; }
+.stat-card:hover::after { opacity:1; }
+.stat-label { font-size:10.5px; font-weight:500; letter-spacing:0.08em; text-transform:uppercase; color:var(--dark-60); margin-bottom:10px; }
+.stat-value { font-size:30px; font-weight:300; letter-spacing:-0.03em; line-height:1; margin-bottom:6px; }
+.stat-value span { font-size:15px; font-weight:500; color:var(--green); }
+.stat-delta { font-size:11.5px; color:var(--dark-60); }
+.stat-delta.up { color:var(--green); }
+
+.grid-32 { display:grid; grid-template-columns:3fr 2fr; gap:22px; margin-bottom:22px; }
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-bottom:22px; }
+
+.card { background:var(--white); border-radius:var(--radius-lg); border:1px solid var(--border); overflow:hidden; }
+.card-header { padding:22px 26px 0; display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:18px; }
+.card-title { font-size:14.5px; font-weight:600; }
+.card-subtitle { font-size:11.5px; color:var(--dark-60); margin-top:2px; }
+.card-body { padding:0 26px 26px; }
+.tag { font-size:10.5px; font-weight:600; padding:4px 10px; border-radius:20px; background:var(--green-10); color:var(--green); letter-spacing:0.04em; white-space:nowrap; }
+
+.prompt-card { background:var(--dark); border-radius:var(--radius-lg); padding:26px; position:relative; overflow:hidden; margin-bottom:22px; }
+.prompt-card::before { content:''; position:absolute; top:-50px; right:-50px; width:200px; height:200px; border-radius:50%; background:radial-gradient(circle,rgba(4,209,106,0.18) 0%,transparent 70%); pointer-events:none; }
+.prompt-eyebrow { font-size:10px; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; color:var(--green); margin-bottom:8px; }
+.prompt-text { font-size:16px; font-weight:300; color:var(--white); line-height:1.55; letter-spacing:-0.01em; margin-bottom:16px; }
+.prompt-text em { font-style:italic; color:rgba(255,255,255,0.55); }
+.prompt-input { width:100%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:12px 14px; font-family:'DM Sans',sans-serif; font-size:13px; color:var(--white); resize:none; outline:none; min-height:76px; transition:border-color 0.15s; }
+.prompt-input::placeholder { color:rgba(255,255,255,0.22); }
+.prompt-input:focus { border-color:rgba(4,209,106,0.5); }
+.prompt-actions { display:flex; justify-content:flex-end; margin-top:10px; gap:8px; }
+.btn-save { background:var(--green); color:var(--dark); font-size:12px; padding:8px 16px; border-radius:6px; border:none; font-family:'DM Sans',sans-serif; font-weight:600; cursor:pointer; }
+.btn-save:hover { background:#02bb5e; }
+.btn-skip { background:transparent; color:rgba(255,255,255,0.35); font-size:12px; padding:8px 14px; border-radius:6px; border:1px solid rgba(255,255,255,0.1); font-family:'DM Sans',sans-serif; cursor:pointer; }
+.btn-skip:hover { color:rgba(255,255,255,0.65); }
+.prompt-saved { display:none; align-items:center; gap:10px; color:var(--green); font-size:13px; font-weight:500; margin-top:10px; }
+
+.chart-area { height:130px; position:relative; margin-bottom:14px; }
+.chart-svg { width:100%; height:100%; overflow:visible; }
+.chart-months { display:flex; justify-content:space-between; font-size:10.5px; color:var(--dark-60); font-family:'DM Mono',monospace; }
+
+.goal-list { display:flex; flex-direction:column; gap:10px; }
+.goal-item { display:flex; align-items:flex-start; gap:12px; padding:14px; border-radius:10px; background:var(--surface); border:1.5px solid transparent; transition:all 0.15s; cursor:pointer; }
+.goal-item:hover { border-color:var(--green-40); background:var(--green-10); }
+.goal-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; margin-top:3px; }
+.goal-dot.active { background:var(--green); box-shadow:0 0 0 3px var(--green-20); }
+.goal-dot.pending { background:transparent; border:2px solid rgba(0,18,34,0.2); }
+.goal-content { flex:1; }
+.goal-title { font-size:13px; font-weight:500; }
+.goal-meta { font-size:11px; color:var(--dark-60); margin-top:2px; }
+.goal-pct { font-size:11px; font-weight:600; font-family:'DM Mono',monospace; color:var(--green); flex-shrink:0; margin-top:2px; }
+
+.bar-track { height:6px; background:var(--dark-80); border-radius:99px; position:relative; overflow:hidden; }
+.bar-now { position:absolute; left:0; top:0; height:100%; background:var(--green); border-radius:99px; transition:width 1s ease; }
+
+.comp-card-panel { background:var(--white); border-radius:var(--radius-lg); border:1px solid var(--border); padding:22px 24px; margin-bottom:22px; }
+.comp-card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.comp-card-title { font-size:13.5px; font-weight:600; }
+.comp-card-counter { font-size:11px; color:var(--dark-60); font-family:'DM Mono',monospace; }
+.comp-card { background:var(--dark); border-radius:14px; padding:22px; min-height:190px; position:relative; overflow:hidden; display:flex; flex-direction:column; justify-content:space-between; }
+.comp-card::before { content:''; position:absolute; top:-30px; right:-30px; width:130px; height:130px; border-radius:50%; background:radial-gradient(circle,rgba(4,209,106,0.2) 0%,transparent 70%); }
+.comp-card-factor { font-size:10px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:8px; }
+.comp-card-name { font-size:18px; font-weight:600; color:var(--white); letter-spacing:-0.01em; margin-bottom:8px; line-height:1.2; }
+.comp-card-desc { font-size:12px; color:rgba(255,255,255,0.5); line-height:1.5; flex:1; margin-bottom:14px; }
+.comp-card-nav { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+.comp-nav-btn { background:rgba(255,255,255,0.08); border:none; color:rgba(255,255,255,0.6); font-size:12px; font-family:'DM Sans',sans-serif; padding:7px 12px; border-radius:6px; cursor:pointer; transition:all 0.15s; }
+.comp-nav-btn:hover { background:rgba(255,255,255,0.14); color:var(--white); }
+.comp-select-btn { background:var(--green); border:none; color:var(--dark); font-size:11px; font-weight:600; font-family:'DM Sans',sans-serif; padding:7px 14px; border-radius:6px; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+.comp-select-btn:hover { background:#02bb5e; }
+.comp-select-btn.selected { background:rgba(255,255,255,0.1); color:rgba(255,255,255,0.45); cursor:default; }
+.comp-dots { display:flex; gap:5px; align-items:center; }
+.comp-dot { width:5px; height:5px; border-radius:50%; background:rgba(255,255,255,0.2); transition:background 0.2s; }
+.comp-dot.active { background:var(--green); }
+
+.streak-grid { display:grid; grid-template-columns:repeat(13,1fr); gap:4px; margin-bottom:10px; }
+.sdot { aspect-ratio:1; border-radius:3px; background:var(--dark-80); }
+.sdot.d1 { background:var(--green-20); }
+.sdot.d2 { background:var(--green-40); }
+.sdot.d3 { background:var(--green); }
+.sdot.today { outline:2px solid var(--green); outline-offset:1px; }
+.streak-legend { display:flex; align-items:center; gap:7px; font-size:11px; color:var(--dark-60); }
+.sl-dots { display:flex; gap:3px; }
+.sl-dot { width:10px; height:10px; border-radius:2px; }
+
+.upcoming-list { display:flex; flex-direction:column; }
+.upcoming-item { display:flex; align-items:center; gap:14px; padding:13px 0; border-bottom:1px solid var(--border); }
+.upcoming-item:last-child { border-bottom:none; }
+.upcoming-date { width:38px; text-align:center; flex-shrink:0; }
+.upcoming-day { font-size:17px; font-weight:300; line-height:1; }
+.upcoming-month { font-size:10px; text-transform:uppercase; letter-spacing:0.07em; color:var(--dark-60); }
+.upcoming-content { flex:1; }
+.upcoming-title { font-size:13px; font-weight:500; }
+.upcoming-type { font-size:11px; color:var(--dark-60); margin-top:1px; }
+.ubadge { font-size:10px; font-weight:600; padding:3px 8px; border-radius:20px; letter-spacing:0.04em; }
+.ub-w { background:var(--green-10); color:var(--green); }
+.ub-c { background:rgba(0,18,34,0.06); color:var(--dark-60); }
+.ub-k { background:rgba(255,200,50,0.12); color:#b07d00; }
+
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,18,34,0.5); z-index:200; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+.modal-overlay.open { display:flex; }
+.modal { background:var(--white); border-radius:var(--radius-lg); width:520px; max-width:92vw; max-height:88vh; overflow-y:auto; padding:36px; position:relative; animation:fadeUp 0.25s ease; }
+.modal-close { position:absolute; top:18px; right:18px; width:30px; height:30px; border-radius:50%; background:var(--surface); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--dark-60); font-size:16px; }
+.modal-close:hover { background:var(--border); }
+.modal-title { font-size:20px; font-weight:600; margin-bottom:4px; }
+.modal-sub { font-size:13px; color:var(--dark-60); margin-bottom:26px; }
+.form-group { margin-bottom:20px; }
+.form-label { font-size:11px; font-weight:600; letter-spacing:0.07em; text-transform:uppercase; color:var(--dark-60); margin-bottom:7px; display:block; }
+.form-input,.form-textarea,.form-select { width:100%; padding:11px 14px; border:1.5px solid var(--border); border-radius:8px; font-family:'DM Sans',sans-serif; font-size:13.5px; color:var(--dark); outline:none; transition:border-color 0.15s; background:var(--white); }
+.form-input:focus,.form-textarea:focus,.form-select:focus { border-color:var(--green); }
+.form-textarea { resize:none; min-height:80px; }
+.form-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:8px; }
+.slider-wrap { display:flex; align-items:center; gap:12px; }
+.slider { flex:1; -webkit-appearance:none; height:5px; border-radius:99px; background:var(--dark-80); outline:none; cursor:pointer; }
+.slider::-webkit-slider-thumb { -webkit-appearance:none; width:17px; height:17px; border-radius:50%; background:var(--green); cursor:pointer; border:2px solid var(--white); box-shadow:0 2px 6px rgba(4,209,106,0.4); }
+.slider-val { font-size:13px; font-weight:600; font-family:'DM Mono',monospace; color:var(--green); width:26px; text-align:right; }
+
+.journal-list { display:flex; flex-direction:column; gap:12px; }
+.je { background:var(--white); border-radius:var(--radius); border:1px solid var(--border); padding:20px 22px; cursor:pointer; transition:all 0.15s; }
+.je:hover { border-color:var(--green-40); box-shadow:0 4px 12px rgba(0,18,34,0.06); }
+.je-top { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:8px; }
+.je-date { font-size:11px; font-family:'DM Mono',monospace; color:var(--dark-60); }
+.je-tag { font-size:10px; font-weight:600; padding:3px 8px; border-radius:20px; }
+.je-text { font-size:13.5px; line-height:1.55; }
+.je-text.clamp { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+
+.comp-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.cpi { background:var(--white); border-radius:var(--radius); border:1.5px solid var(--border); padding:18px; cursor:pointer; transition:all 0.15s; }
+.cpi:hover { border-color:var(--green-40); transform:translateY(-1px); }
+.cpi.focus { border-color:var(--green); background:var(--green-10); }
+.cpi-factor { font-size:10px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:5px; }
+.cpi-name { font-size:13.5px; font-weight:600; margin-bottom:5px; }
+.cpi-desc { font-size:11.5px; color:var(--dark-60); line-height:1.5; }
+.cpi-score-row { margin-top:10px; display:flex; align-items:center; gap:8px; }
+.cpi-bar { flex:1; height:4px; background:var(--dark-80); border-radius:99px; overflow:hidden; }
+.cpi-bar-fill { height:100%; background:var(--green); border-radius:99px; }
+.cpi-val { font-size:11px; font-weight:600; font-family:'DM Mono',monospace; color:var(--green); }
+
+.toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--dark); color:var(--white); padding:12px 20px; border-radius:10px; font-size:13px; font-weight:500; display:flex; align-items:center; gap:10px; opacity:0; pointer-events:none; transition:all 0.3s; z-index:300; white-space:nowrap; }
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+.toast-dot { width:8px; height:8px; border-radius:50%; background:var(--green); flex-shrink:0; }
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-wordmark">adyen</div>
+    <div class="logo-sub">Own Your Growth</div>
+  </div>
+  <div class="sidebar-label">My Growth</div>
+  <div class="nav-item active" onclick="go('dashboard',this)">
+    <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".4"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".4"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".4"/></svg>
+    Dashboard
+  </div>
+  <div class="nav-item" onclick="go('journal',this)">
+    <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M3 4h10M3 12h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    Journal
+  </div>
+  <div class="nav-item" onclick="go('goals',this)">
+    <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="8" r="2.5" fill="currentColor"/></svg>
+    Goals
+  </div>
+  <div class="nav-item" onclick="go('competencies',this)">
+    <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><path d="M2 12L6 7l3 3 2-2.5L14 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Competencies
+  </div>
+  <div class="nav-divider"></div>
+  <div class="sidebar-label">Explore</div>
+  <div class="nav-item" onclick="go('workshops',this)">
+    <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 8h6M5 5.5h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    Workshops
+  </div>
+  <div class="nav-item" onclick="go('circles',this)">
+    <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><circle cx="5" cy="8" r="2.5" stroke="currentColor" stroke-width="1.5"/><circle cx="11" cy="5" r="2.5" stroke="currentColor" stroke-width="1.5"/><circle cx="11" cy="11" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M7.5 7L9 6M7.5 9L9 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    Coaching Circles
+  </div>
+  <div class="sidebar-bottom">
+    <div class="user-chip">
+      <div class="avatar">SL</div>
+      <div>
+        <div class="user-name">Sara Lindhout</div>
+        <div class="user-role">Senior Engineer · 14 mo</div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main class="main">
+
+<!-- DASHBOARD -->
+<div class="view active" id="view-dashboard">
+  <div class="topbar">
+    <div>
+      <div class="topbar-eyebrow">Week 3 of March</div>
+      <div class="topbar-title">Good morning, <strong>Sara.</strong><br>What are you working on today?</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost" onclick="open_modal('modal-entry')">+ New entry</button>
+      <button class="btn btn-primary" onclick="open_modal('modal-checkin')">Weekly check-in</button>
+    </div>
+  </div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-label">Reflection streak</div><div class="stat-value">12<span> weeks</span></div><div class="stat-delta up">↑ longest yet</div></div>
+    <div class="stat-card"><div class="stat-label">Goals active</div><div class="stat-value">3<span> / 5</span></div><div class="stat-delta">2 completed this quarter</div></div>
+    <div class="stat-card"><div class="stat-label">Avg. competency</div><div class="stat-value">3.8<span> / 5</span></div><div class="stat-delta up">↑ 0.6 since January</div></div>
+    <div class="stat-card"><div class="stat-label">Journal entries</div><div class="stat-value">47</div><div class="stat-delta">across 14 months</div></div>
+  </div>
+  <div class="prompt-card">
+    <div class="prompt-eyebrow">Today's reflection prompt</div>
+    <div class="prompt-text">What's one thing you did this week that felt slightly <em>outside your comfort zone</em> — and what did it teach you?</div>
+    <textarea class="prompt-input" id="dashPromptInput" placeholder="Write your reflection here — only you can see this..."></textarea>
+    <div class="prompt-actions" id="promptActions">
+      <button class="btn-skip" onclick="skipPrompt()">Skip for now</button>
+      <button class="btn-save" onclick="savePrompt()">Save reflection</button>
+    </div>
+    <div class="prompt-saved" id="promptSaved">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" fill="#04D16A"/><path d="M5 8l2 2 4-4" stroke="#001222" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Saved. See you next time.
+    </div>
+  </div>
+  <div class="grid-32">
+    <div class="card">
+      <div class="card-header">
+        <div><div class="card-title">Growth over time</div><div class="card-subtitle">Average competency self-assessment score</div></div>
+        <span class="tag">14 months</span>
+      </div>
+      <div class="card-body">
+        <div class="chart-area">
+          <svg class="chart-svg" viewBox="0 0 500 125" preserveAspectRatio="none">
+            <line x1="0" y1="25" x2="500" y2="25" stroke="#001222" stroke-opacity="0.05" stroke-width="1"/>
+            <line x1="0" y1="50" x2="500" y2="50" stroke="#001222" stroke-opacity="0.05" stroke-width="1"/>
+            <line x1="0" y1="75" x2="500" y2="75" stroke="#001222" stroke-opacity="0.05" stroke-width="1"/>
+            <line x1="0" y1="100" x2="500" y2="100" stroke="#001222" stroke-opacity="0.05" stroke-width="1"/>
+            <defs>
+              <linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#04D16A" stop-opacity="0.14"/>
+                <stop offset="100%" stop-color="#04D16A" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d="M0,100 C30,100 30,95 60,93 C90,91 90,87 120,85 C150,83 150,79 180,75 C210,71 210,67 240,63 C270,59 270,53 300,49 C330,45 330,41 360,37 C390,33 420,28 460,25 C480,23 490,22 500,21 L500,125 L0,125 Z" fill="url(#ag)"/>
+            <path d="M0,100 C30,100 30,95 60,93 C90,91 90,87 120,85 C150,83 150,79 180,75 C210,71 210,67 240,63 C270,59 270,53 300,49 C330,45 330,41 360,37 C390,33 420,28 460,25 C480,23 490,22 500,21" fill="none" stroke="#04D16A" stroke-width="2.5" stroke-linecap="round"/>
+            <circle cx="180" cy="75" r="5" fill="#04D16A"/>
+            <line x1="180" y1="75" x2="180" y2="4" stroke="#04D16A" stroke-opacity="0.3" stroke-width="1" stroke-dasharray="3,3"/>
+            <rect x="151" y="2" width="60" height="18" rx="4" fill="#04D16A" fill-opacity="0.12"/>
+            <text x="181" y="14.5" text-anchor="middle" font-family="DM Sans" font-size="9.5" fill="#04D16A" font-weight="600">Workshop</text>
+            <circle cx="500" cy="21" r="5" fill="#04D16A"/>
+            <circle cx="500" cy="21" r="9" fill="#04D16A" fill-opacity="0.15"/>
+          </svg>
+        </div>
+        <div class="chart-months"><span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span><span>Jan</span><span>Now</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div><div class="card-title">Active goals</div><div class="card-subtitle">This quarter</div></div></div>
+      <div class="card-body">
+        <div class="goal-list" id="dashGoals"></div>
+        <div style="margin-top:14px;">
+          <button class="btn btn-ghost" style="width:100%;justify-content:center;font-size:12px;" onclick="go('goals',document.querySelectorAll('.nav-item')[2])">View all goals →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="comp-card-panel">
+      <div class="comp-card-header">
+        <div class="comp-card-title">Explore competencies</div>
+        <div class="comp-card-counter" id="ccCounter">1 / 38</div>
+      </div>
+      <div class="comp-card" id="compCard">
+        <div>
+          <div class="comp-card-factor" id="ccFactor"></div>
+          <div class="comp-card-name" id="ccName"></div>
+          <div class="comp-card-desc" id="ccDesc"></div>
+        </div>
+        <div class="comp-card-nav">
+          <button class="comp-nav-btn" onclick="prevC()">← Prev</button>
+          <div class="comp-dots" id="ccDots"></div>
+          <button class="comp-select-btn" id="ccSelectBtn" onclick="addFocus()">Add focus</button>
+          <button class="comp-nav-btn" onclick="nextC()">Next →</button>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:22px;">
+      <div class="card">
+        <div class="card-header"><div><div class="card-title">Reflection rhythm</div><div class="card-subtitle">Weekly check-in activity</div></div><span class="tag">12 weeks</span></div>
+        <div class="card-body">
+          <div class="streak-grid" id="streakGrid"></div>
+          <div class="streak-legend"><span>Less</span><div class="sl-dots"><div class="sl-dot" style="background:var(--dark-80)"></div><div class="sl-dot" style="background:var(--green-20)"></div><div class="sl-dot" style="background:var(--green-40)"></div><div class="sl-dot" style="background:var(--green)"></div></div><span>More</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div><div class="card-title">Coming up</div></div></div>
+        <div class="card-body">
+          <div class="upcoming-list">
+            <div class="upcoming-item"><div class="upcoming-date"><div class="upcoming-day">12</div><div class="upcoming-month">Mar</div></div><div class="upcoming-content"><div class="upcoming-title">OYG Workshop</div><div class="upcoming-type">All employees · 3 hours</div></div><span class="ubadge ub-w">Workshop</span></div>
+            <div class="upcoming-item"><div class="upcoming-date"><div class="upcoming-day">17</div><div class="upcoming-month">Mar</div></div><div class="upcoming-content"><div class="upcoming-title">Monthly check-in</div><div class="upcoming-type">Self-reflection · 15 min</div></div><span class="ubadge ub-k">Check-in</span></div>
+            <div class="upcoming-item"><div class="upcoming-date"><div class="upcoming-day">24</div><div class="upcoming-month">Mar</div></div><div class="upcoming-content"><div class="upcoming-title">Coaching Circle</div><div class="upcoming-type">Peer group · optional</div></div><span class="ubadge ub-c">Circle</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JOURNAL -->
+<div class="view" id="view-journal">
+  <div class="topbar">
+    <div><div class="topbar-eyebrow">Private · Only you can see this</div><div class="topbar-title">Your <strong>journal.</strong></div></div>
+    <div class="topbar-actions"><button class="btn btn-primary" onclick="open_modal('modal-entry')">+ New entry</button></div>
+  </div>
+  <div class="journal-list" id="journalList"></div>
+</div>
+
+<!-- GOALS -->
+<div class="view" id="view-goals">
+  <div class="topbar">
+    <div><div class="topbar-eyebrow">Q1 2026</div><div class="topbar-title">Your <strong>goals.</strong></div></div>
+    <div class="topbar-actions"><button class="btn btn-primary" onclick="open_modal('modal-goal')">+ Add goal</button></div>
+  </div>
+  <div class="grid-2" id="goalsGrid"></div>
+</div>
+
+<!-- COMPETENCIES -->
+<div class="view" id="view-competencies">
+  <div class="topbar">
+    <div><div class="topbar-eyebrow">Korn Ferry Leadership Architect · 38 Competencies</div><div class="topbar-title">Your <strong>competencies.</strong></div></div>
+    <div class="topbar-actions"><button class="btn btn-ghost" onclick="open_modal('modal-assess')">Update self-assessment</button></div>
+  </div>
+  <div class="comp-grid" id="compGrid"></div>
+</div>
+
+<!-- WORKSHOPS -->
+<div class="view" id="view-workshops">
+  <div class="topbar"><div><div class="topbar-eyebrow">Learning events</div><div class="topbar-title">Upcoming <strong>workshops.</strong></div></div></div>
+  <div class="card">
+    <div style="padding:28px 26px;border-bottom:1px solid var(--border);">
+      <div style="display:flex;gap:20px;">
+        <div style="background:var(--green-10);border-radius:12px;padding:14px 18px;text-align:center;flex-shrink:0;"><div style="font-size:26px;font-weight:300;color:var(--green);">12</div><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--green);">Mar</div></div>
+        <div>
+          <div style="font-size:17px;font-weight:600;margin-bottom:5px;">Own Your Growth — Full Workshop</div>
+          <div style="font-size:13px;color:var(--dark-60);margin-bottom:12px;">3 hours · All employees · Amsterdam HQ + Remote</div>
+          <div style="font-size:13px;line-height:1.6;color:var(--dark-60);max-width:540px;">A hands-on session to bring OYG to life. Set your first journal goals, complete a live competency self-assessment, and connect with peers on what growth looks like in your role. Bring your journal.</div>
+          <div style="margin-top:14px;"><button class="btn btn-primary" onclick="toast('You\'re registered for March 12 ✓')">Register →</button></div>
+        </div>
+      </div>
+    </div>
+    <div style="padding:22px 26px;">
+      <div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--dark-60);margin-bottom:14px;">Past workshops</div>
+      <div style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--surface);border-radius:10px;">
+        <div style="font-size:12px;font-family:'DM Mono',monospace;color:var(--dark-60);width:60px;">Jan 2025</div>
+        <div style="flex:1;font-size:13px;font-weight:500;">OYG Onboarding Introduction</div>
+        <span class="tag">Attended</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CIRCLES -->
+<div class="view" id="view-circles">
+  <div class="topbar"><div><div class="topbar-eyebrow">Peer learning</div><div class="topbar-title">Coaching <strong>circles.</strong></div></div></div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><div><div class="card-title">Growth & Communication</div><div class="card-subtitle">8 members · Monthly</div></div><span class="ubadge ub-w" style="margin-top:4px;">Joined</span></div>
+      <div class="card-body">
+        <div style="font-size:13px;color:var(--dark-60);line-height:1.6;margin-bottom:16px;">A peer circle focused on developing communication skills and sharing growth stories across teams.</div>
+        <div style="font-size:10.5px;font-weight:600;color:var(--dark-60);margin-bottom:7px;text-transform:uppercase;letter-spacing:0.07em;">Next session</div>
+        <div style="font-size:14px;font-weight:500;">March 24 · 12:00–13:00</div>
+        <div style="margin-top:14px;"><button class="btn btn-ghost" style="font-size:12px;" onclick="toast('Added to your calendar ✓')">Add to calendar</button></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div><div class="card-title">Builder's Mindset</div><div class="card-subtitle">12 members · Bi-weekly</div></div></div>
+      <div class="card-body">
+        <div style="font-size:13px;color:var(--dark-60);line-height:1.6;margin-bottom:16px;">Share experiments, failures, and learnings in a safe space. Explore what a builder's mindset looks like in practice.</div>
+        <div style="font-size:10.5px;font-weight:600;color:var(--dark-60);margin-bottom:7px;text-transform:uppercase;letter-spacing:0.07em;">Next session</div>
+        <div style="font-size:14px;font-weight:500;">March 18 · 15:00–16:00</div>
+        <div style="margin-top:14px;"><button class="btn btn-primary" style="font-size:12px;" onclick="toast('Joined Builder\'s Mindset circle ✓')">Join circle</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-entry">
+  <div class="modal">
+    <button class="modal-close" onclick="close_modal('modal-entry')">×</button>
+    <div class="modal-title">New journal entry</div>
+    <div class="modal-sub">Only you can see what you write here.</div>
+    <div class="form-group"><label class="form-label">What's on your mind?</label><textarea class="form-textarea" id="entryText" placeholder="Reflect freely..." style="min-height:120px;"></textarea></div>
+    <div class="form-group"><label class="form-label">Tag this entry</label><select class="form-select" id="entryTag"><option>Reflection</option><option>Goal update</option><option>Win</option><option>Challenge</option><option>Insight</option></select></div>
+    <div class="form-actions"><button class="btn btn-ghost" onclick="close_modal('modal-entry')">Cancel</button><button class="btn btn-primary" onclick="saveEntry()">Save entry</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-checkin">
+  <div class="modal">
+    <button class="modal-close" onclick="close_modal('modal-checkin')">×</button>
+    <div class="modal-title">Weekly check-in</div>
+    <div class="modal-sub">A quick pulse on how your week went.</div>
+    <div class="form-group"><label class="form-label">One thing I learned this week</label><textarea class="form-textarea" id="ci1" placeholder="e.g. I communicate better in writing than live..."></textarea></div>
+    <div class="form-group"><label class="form-label">One thing I want to try differently</label><textarea class="form-textarea" id="ci2" placeholder="e.g. Ask more questions before jumping to solutions..."></textarea></div>
+    <div class="form-group"><label class="form-label">Energy this week — <span id="energyVal" style="color:var(--green);font-family:'DM Mono',monospace;">3</span> / 5</label><div class="slider-wrap"><input type="range" class="slider" min="1" max="5" value="3" oninput="document.getElementById('energyVal').textContent=this.value"></div></div>
+    <div class="form-actions"><button class="btn btn-ghost" onclick="close_modal('modal-checkin')">Cancel</button><button class="btn btn-primary" onclick="saveCheckin()">Complete check-in</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-goal">
+  <div class="modal">
+    <button class="modal-close" onclick="close_modal('modal-goal')">×</button>
+    <div class="modal-title">Add a goal</div>
+    <div class="modal-sub">What do you want to work on this quarter?</div>
+    <div class="form-group"><label class="form-label">Goal</label><input class="form-input" id="goalTitle" placeholder="e.g. Lead a cross-team project"></div>
+    <div class="form-group"><label class="form-label">Related competency</label><select class="form-select" id="goalComp"><option>Collaborates</option><option>Communicates Effectively</option><option>Courage</option><option>Action Oriented</option><option>Ensures Accountability</option><option>Manages Ambiguity</option><option>Drives Results</option><option>Decision Quality</option><option>Builds Networks</option><option>Nimble Learning</option></select></div>
+    <div class="form-group"><label class="form-label">Why does this matter to you?</label><textarea class="form-textarea" id="goalWhy" placeholder="Connect it to something real..."></textarea></div>
+    <div class="form-actions"><button class="btn btn-ghost" onclick="close_modal('modal-goal')">Cancel</button><button class="btn btn-primary" onclick="saveGoal()">Add goal</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-assess">
+  <div class="modal">
+    <button class="modal-close" onclick="close_modal('modal-assess')">×</button>
+    <div class="modal-title">Update self-assessment</div>
+    <div class="modal-sub">Rate where you feel you are right now. This is for you — be honest.</div>
+    <div id="assessSliders"></div>
+    <div class="form-actions"><button class="btn btn-ghost" onclick="close_modal('modal-assess')">Cancel</button><button class="btn btn-primary" onclick="saveAssess()">Save assessment</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toastEl"><div class="toast-dot"></div><span id="toastMsg"></span></div>
+
+<script>
+const COMPS = [
+  {name:"Ensures Accountability",factor:"Results",desc:"Holds self and others accountable to meet commitments. Takes personal responsibility for decisions and failures."},
+  {name:"Action Oriented",factor:"Results",desc:"Takes on new opportunities and tough challenges with urgency and enthusiasm. Identifies and seizes new opportunities."},
+  {name:"Manages Ambiguity",factor:"Thought",desc:"Operates effectively, even when things are not certain or the way forward is not clear. Calm and productive under uncertainty."},
+  {name:"Attracts Top Talent",factor:"People",desc:"Attracts and selects the best talent to meet current and future business needs."},
+  {name:"Business Insight",factor:"Thought",desc:"Applies knowledge of business and the marketplace to advance the organization's goals."},
+  {name:"Collaborates",factor:"People",desc:"Builds partnerships and works collaboratively with others to meet shared objectives. Gives credit to others."},
+  {name:"Communicates Effectively",factor:"People",desc:"Develops and delivers communications that convey clear understanding. Tailors approach to the audience."},
+  {name:"Courage",factor:"Self",desc:"Steps up to address difficult issues. Says what needs to be said. Faces challenges directly without backing down."},
+  {name:"Cultivates Innovation",factor:"Thought",desc:"Creates new and better ways for the organization to be successful. Encourages exploration of new possibilities."},
+  {name:"Customer Focus",factor:"Results",desc:"Builds strong customer relationships and delivers customer-centric solutions. Anticipates evolving customer needs."},
+  {name:"Decision Quality",factor:"Thought",desc:"Makes good and timely decisions. Relies on analysis, wisdom, and experience to keep the organization moving forward."},
+  {name:"Develops Talent",factor:"People",desc:"Develops people to meet both career goals and the organization's goals. Invests time in growing others."},
+  {name:"Directs Work",factor:"Results",desc:"Provides direction, delegates, and removes obstacles to get work done. Sets clear expectations and accountabilities."},
+  {name:"Drives Engagement",factor:"People",desc:"Creates a climate where people are motivated to do their best work. Empowers others and builds energy around shared goals."},
+  {name:"Drives Results",factor:"Results",desc:"Consistently achieves results, even under tough circumstances. Has a strong bottom-line orientation and perseverance."},
+  {name:"Drives Vision & Purpose",factor:"Results",desc:"Paints a compelling picture of the vision and strategy that motivates others to action."},
+  {name:"Emotional Intelligence",factor:"Self",desc:"High self-awareness and self-regulation. Understands and manages own emotions; recognizes others' emotions."},
+  {name:"Financial Acumen",factor:"Thought",desc:"Interprets and applies understanding of key financial indicators to make better business decisions."},
+  {name:"Global Perspective",factor:"Thought",desc:"Takes a broad view when approaching issues. Understands the impact of global events on the organization."},
+  {name:"Instills Trust",factor:"People",desc:"Gains the confidence and trust of others through honesty, integrity, and authenticity. Direct and truthful."},
+  {name:"Interpersonal Savvy",factor:"People",desc:"Relates openly and comfortably with diverse groups of people. Talent for defusing high-tension situations."},
+  {name:"Learns on the Fly",factor:"Self",desc:"Learns quickly when facing new situations. Experiments to find solutions. Embraces unfamiliar tasks with curiosity."},
+  {name:"Manages Complexity",factor:"Thought",desc:"Makes sense of complex, high-quantity information to effectively solve problems. Looks beyond the obvious."},
+  {name:"Manages Conflict",factor:"People",desc:"Handles conflict situations effectively with minimum friction. Finds common ground and collaborative solutions."},
+  {name:"Nimble Learning",factor:"Self",desc:"Actively learns through experimentation when tackling new problems. Extracts lessons learned from failures."},
+  {name:"Organizational Savvy",factor:"People",desc:"Maneuvers comfortably through complex policy, process, and people-related organizational dynamics."},
+  {name:"Persuades",factor:"People",desc:"Uses compelling arguments to gain support and commitment. Direct, assertive, and engaging communication style."},
+  {name:"Plans & Aligns",factor:"Results",desc:"Plans and prioritizes work to meet commitments aligned with organizational goals. Breaks objectives into actionable steps."},
+  {name:"Resourcefulness",factor:"Results",desc:"Secures and deploys resources effectively and efficiently. Orchestrates multiple activities simultaneously."},
+  {name:"Self-Development",factor:"Self",desc:"Personally committed to continuously improving. Seeks feedback actively and makes real changes based on it."},
+  {name:"Situational Adaptability",factor:"Self",desc:"Adapts approach in real time to match shifting demands of different situations. Flexible and open to change."},
+  {name:"Strategic Mindset",factor:"Thought",desc:"Sees ahead to future possibilities and translates them into breakthrough strategies. Takes a long-term view."},
+  {name:"Tech Savvy",factor:"Thought",desc:"Anticipates and adopts innovations in business-building digital and technology applications."},
+  {name:"Values Differences",factor:"People",desc:"Recognizes the value that different perspectives and cultures bring. Actively seeks diverse viewpoints."},
+  {name:"Being Resilient",factor:"Self",desc:"Rebounds from setbacks and adversity when facing difficult situations. Grows from hardships and negative experiences."},
+  {name:"Balances Stakeholders",factor:"People",desc:"Anticipates and balances the needs of multiple stakeholders. Understands that alignment is key to progress."},
+  {name:"Builds Effective Teams",factor:"People",desc:"Forms, develops, and leads high-performing teams. Creates belonging and strong team morale."},
+  {name:"Builds Networks",factor:"People",desc:"Effectively builds formal and informal relationship networks inside and outside the organization."},
+];
+
+const FC = {Thought:'#6366f1',Results:'#f59e0b',People:'#3b82f6',Self:'#04D16A'};
+const TAG_BG = {Reflection:'rgba(4,209,106,0.1)',Win:'rgba(255,200,50,0.12)','Goal update':'rgba(99,102,241,0.1)',Challenge:'rgba(239,68,68,0.1)',Insight:'rgba(59,130,246,0.1)'};
+const TAG_FG = {Reflection:'#04D16A',Win:'#b07d00','Goal update':'#6366f1',Challenge:'#ef4444',Insight:'#3b82f6'};
+
+let goals = [
+  {title:"Lead a cross-team project",comp:"Collaborates",why:"I want to grow beyond my immediate team",pct:60,status:"active"},
+  {title:"Improve written communication",comp:"Communicates Effectively",why:"Writing is how I'm most judged remotely",pct:75,status:"active"},
+  {title:"Give feedback to 3 peers",comp:"Courage",why:"I avoid hard conversations and I know it",pct:0,status:"pending"},
+  {title:"Complete OYG Workshop",comp:"Nimble Learning",why:"Fresh start on my growth practice",pct:100,status:"complete"},
+  {title:"Join a coaching circle",comp:"Builds Networks",why:"Peer learning is underrated",pct:100,status:"complete"},
+];
+
+let journal = [
+  {date:"Mar 7, 2026",tag:"Win",text:"Presented to a room of 30 people today without notes. Was terrified going in but actually felt grounded once I started. Something is shifting."},
+  {date:"Mar 3, 2026",tag:"Challenge",text:"Got feedback that my written updates lack context for stakeholders. Stung a bit but it's fair. Going to be more deliberate about audience awareness."},
+  {date:"Feb 24, 2026",tag:"Insight",text:"Noticed I'm much more effective when I've slept well. Not groundbreaking, but I keep ignoring it. Protecting sleep is protecting performance."},
+  {date:"Feb 17, 2026",tag:"Reflection",text:"Had a great 1:1 where I talked about my goals out loud for the first time. Saying them to someone else made them feel more real."},
+  {date:"Feb 10, 2026",tag:"Goal update",text:"Halfway through leading the cross-team project. It's harder than expected — coordination is the real skill, not the work itself."},
+];
+
+let scores = {"Collaborates":4.0,"Communicates Effectively":4.2,"Courage":3.2,"Nimble Learning":4.5,"Ensures Accountability":3.8};
+let focus = new Set(["Collaborates","Communicates Effectively","Courage","Nimble Learning","Ensures Accountability"]);
+let ci = 0;
+
+// Nav
+function go(id, el) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('view-'+id).classList.add('active');
+  if(el) el.classList.add('active');
+  if(id==='goals') renderGoals();
+  if(id==='journal') renderJournal();
+  if(id==='competencies') renderCompGrid();
+}
+
+// Modal
+function open_modal(id) {
+  document.getElementById(id).classList.add('open');
+  if(id==='modal-assess') renderAssessSliders();
+}
+function close_modal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+
+// Toast
+function toast(msg) {
+  const el=document.getElementById('toastEl');
+  document.getElementById('toastMsg').textContent=msg;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+// Prompt
+function savePrompt() {
+  const v=document.getElementById('dashPromptInput').value.trim();
+  if(!v){toast('Write something first');return;}
+  journal.unshift({date:'Mar 9, 2026',tag:'Reflection',text:v});
+  document.getElementById('dashPromptInput').style.display='none';
+  document.getElementById('promptActions').style.display='none';
+  const s=document.getElementById('promptSaved');s.style.display='flex';
+  toast('Reflection saved ✓');
+}
+function skipPrompt(){toast('Skipped — see you tomorrow');}
+
+// Goals
+function renderGoals() {
+  const g=document.getElementById('goalsGrid'); g.innerHTML='';
+  goals.forEach((goal,i)=>{
+    const factorColor=FC[COMPS.find(c=>c.name===goal.comp)?.factor]||'var(--dark-60)';
+    const card=document.createElement('div');
+    card.className='card'; card.style.cssText='padding:22px 24px;';
+    card.innerHTML=`
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:${factorColor};">${goal.comp}</span>
+        ${goal.status==='complete'?'<span class="tag">Complete ✓</span>':goal.status==='pending'?'<span style="font-size:11px;color:var(--dark-60);">Upcoming</span>':'<span style="font-size:11px;color:var(--green);font-weight:600;">'+goal.pct+'%</span>'}
+      </div>
+      <div style="font-size:15px;font-weight:600;margin-bottom:6px;">${goal.title}</div>
+      <div style="font-size:12.5px;color:var(--dark-60);line-height:1.5;margin-bottom:14px;font-style:italic;">"${goal.why}"</div>
+      <div class="bar-track" style="margin-bottom:14px;"><div class="bar-now" style="width:${goal.pct}%;"></div></div>
+      ${goal.status!=='complete'?`<button class="btn btn-ghost" style="width:100%;justify-content:center;font-size:12px;" onclick="completeGoal(${i})">Mark complete</button>`:'<div style="text-align:center;font-size:12px;color:var(--green);font-weight:500;">✓ Completed this quarter</div>'}
+    `;
+    g.appendChild(card);
+  });
+}
+
+function renderDashGoals() {
+  const l=document.getElementById('dashGoals'); l.innerHTML='';
+  goals.filter(g=>g.status!=='complete').slice(0,3).forEach((g,i)=>{
+    const el=document.createElement('div');
+    el.className='goal-item';
+    el.innerHTML=`<div class="goal-dot ${g.status==='pending'?'pending':'active'}"></div><div class="goal-content"><div class="goal-title">${g.title}</div><div class="goal-meta">${g.comp} · ${g.status}</div></div><div class="goal-pct">${g.pct>0?g.pct+'%':'—'}</div>`;
+    l.appendChild(el);
+  });
+}
+
+function completeGoal(i){goals[i].status='complete';goals[i].pct=100;renderGoals();renderDashGoals();toast('Goal marked complete 🎉');}
+
+function saveGoal(){
+  const t=document.getElementById('goalTitle').value.trim();
+  if(!t){toast('Add a goal title');return;}
+  goals.unshift({title:t,comp:document.getElementById('goalComp').value,why:document.getElementById('goalWhy').value||'My goal',pct:0,status:'active'});
+  close_modal('modal-goal');renderGoals();renderDashGoals();toast('Goal added ✓');
+  document.getElementById('goalTitle').value='';document.getElementById('goalWhy').value='';
+}
+
+// Journal
+function renderJournal(){
+  const l=document.getElementById('journalList'); l.innerHTML='';
+  journal.forEach(e=>{
+    const el=document.createElement('div'); el.className='je';
+    el.innerHTML=`<div class="je-top"><span class="je-date">${e.date}</span><span class="je-tag" style="background:${TAG_BG[e.tag]||'var(--green-10)'};color:${TAG_FG[e.tag]||'var(--green)'};">${e.tag}</span></div><div class="je-text clamp">${e.text}</div>`;
+    el.onclick=()=>el.querySelector('.je-text').classList.toggle('clamp');
+    l.appendChild(el);
+  });
+}
+
+function saveEntry(){
+  const t=document.getElementById('entryText').value.trim();
+  if(!t){toast('Write something first');return;}
+  journal.unshift({date:'Mar 9, 2026',tag:document.getElementById('entryTag').value,text:t});
+  close_modal('modal-entry');renderJournal();toast('Entry saved ✓');
+  document.getElementById('entryText').value='';
+}
+
+function saveCheckin(){
+  const l=document.getElementById('ci1').value.trim();
+  if(l) journal.unshift({date:'Mar 9, 2026',tag:'Reflection',text:l});
+  close_modal('modal-checkin');toast('Check-in complete ✓');
+}
+
+// Competency cards
+function renderCard(){
+  const c=COMPS[ci];
+  document.getElementById('ccFactor').textContent=c.factor;
+  document.getElementById('ccFactor').style.color=FC[c.factor]||'var(--green)';
+  document.getElementById('ccName').textContent=c.name;
+  document.getElementById('ccDesc').textContent=c.desc;
+  document.getElementById('ccCounter').textContent=`${ci+1} / ${COMPS.length}`;
+  const btn=document.getElementById('ccSelectBtn');
+  if(focus.has(c.name)){btn.textContent='✓ In focus';btn.classList.add('selected');}
+  else{btn.textContent='Add focus';btn.classList.remove('selected');}
+  const dots=document.getElementById('ccDots'); dots.innerHTML='';
+  const s=Math.max(0,ci-2),e=Math.min(COMPS.length,s+5);
+  for(let i=s;i<e;i++){const d=document.createElement('div');d.className='comp-dot'+(i===ci?' active':'');dots.appendChild(d);}
+}
+function nextC(){ci=(ci+1)%COMPS.length;renderCard();}
+function prevC(){ci=(ci-1+COMPS.length)%COMPS.length;renderCard();}
+function addFocus(){
+  const n=COMPS[ci].name;
+  if(!focus.has(n)){focus.add(n);if(!scores[n])scores[n]=2.5;toast(`"${n}" added to focus areas`);renderCard();renderCompGrid();}
+}
+
+// Competency grid
+function renderCompGrid(){
+  const g=document.getElementById('compGrid'); g.innerHTML='';
+  COMPS.forEach(c=>{
+    const isFocus=focus.has(c.name);
+    const score=scores[c.name]||0;
+    const el=document.createElement('div');
+    el.className='cpi'+(isFocus?' focus':'');
+    el.innerHTML=`
+      <div class="cpi-factor" style="color:${FC[c.factor]||'var(--dark-60)'};">${c.factor}</div>
+      <div class="cpi-name">${c.name}</div>
+      <div class="cpi-desc">${c.desc}</div>
+      ${isFocus?`<div class="cpi-score-row"><div class="cpi-bar"><div class="cpi-bar-fill" style="width:${(score/5)*100}%"></div></div><div class="cpi-val">${score.toFixed(1)}</div></div><div style="font-size:11px;color:var(--green);font-weight:600;margin-top:6px;">★ Focus area</div>`:`<div style="margin-top:8px;font-size:11px;color:var(--dark-60);">Click to add as focus area</div>`}
+    `;
+    el.onclick=()=>{if(!focus.has(c.name)){focus.add(c.name);if(!scores[c.name])scores[c.name]=2.5;toast(`"${c.name}" added to focus areas`);renderCompGrid();}};
+    g.appendChild(el);
+  });
+}
+
+// Assessment sliders
+function renderAssessSliders(){
+  const c=document.getElementById('assessSliders'); c.innerHTML='';
+  [...focus].forEach(name=>{
+    const s=scores[name]||2.5;
+    const id='sv_'+name.replace(/\W/g,'_');
+    const div=document.createElement('div'); div.className='form-group';
+    div.innerHTML=`<label class="form-label">${name} — <span id="${id}" style="color:var(--green);font-family:'DM Mono',monospace;">${s.toFixed(1)}</span></label><div class="slider-wrap"><input type="range" class="slider" min="1" max="5" step="0.5" value="${s}" oninput="document.getElementById('${id}').textContent=parseFloat(this.value).toFixed(1);scores['${name}']=parseFloat(this.value);"></div>`;
+    c.appendChild(div);
+  });
+}
+function saveAssess(){close_modal('modal-assess');renderCompGrid();toast('Self-assessment updated ✓');}
+
+// Streak
+function buildStreak(){
+  const g=document.getElementById('streakGrid');
+  const p=[0,1,2,3,3,2,3,1,2,3,3,2,3,1,3,3,2,1,3,3,2,3,1,2,3,2,3,3,1,2,3,3,2,3,0,1,3,3,2,3,3,0,3,3,2,3,3,2,3,3,2,3];
+  const total=52;
+  for(let i=0;i<total;i++){
+    const d=document.createElement('div'); d.className='sdot';
+    if(i===total-1){d.classList.add('d3','today');}
+    else if(i>total-13){const v=p[i%p.length];if(v>0)d.classList.add('d'+v);}
+    else if(i>10){const v=p[i%p.length];if(v>0)d.classList.add('d'+v);}
+    g.appendChild(d);
+  }
+}
+
+// Init
+renderCard();
+renderDashGoals();
+buildStreak();
+renderJournal();
+</script>
+</body>
+</html>
