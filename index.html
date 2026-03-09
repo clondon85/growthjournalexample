@@ -67,6 +67,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--dark
 .sc:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,18,34,.07);}
 .sc::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--green);opacity:0;transition:opacity .15s;}
 .sc:hover::after{opacity:1;}
+.sc[onclick]::before{content:'→';position:absolute;bottom:14px;right:14px;font-size:12px;color:var(--green);opacity:0;transition:opacity .15s;}
+.sc[onclick]:hover::before{opacity:1;}
 .sl{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--d60);margin-bottom:9px;}
 .sv{font-size:28px;font-weight:300;letter-spacing:-.03em;line-height:1;margin-bottom:5px;}
 .sv span{font-size:14px;font-weight:500;color:var(--green);}
@@ -333,7 +335,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--dark
 <nav class="bnav">
   <div class="bni active" data-v="dashboard" onclick="go('dashboard',this)">
     <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".4"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".4"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".4"/></svg>
-    <span>Home</span>
+    <span>Dashboard</span>
   </div>
   <div class="bni" data-v="journal" onclick="go('journal',this)">
     <svg viewBox="0 0 16 16" fill="none"><path d="M3 8h10M3 4h10M3 12h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
@@ -347,9 +349,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--dark
     <svg viewBox="0 0 16 16" fill="none"><path d="M2 12L6 7l3 3 2-2.5L14 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
     <span>Competencies</span>
   </div>
+  <div class="bni" data-v="workshops" onclick="go('workshops',this)">
+    <svg viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 8h6M5 5.5h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    <span>Workshops</span>
+  </div>
   <div class="bni" data-v="circles" onclick="go('circles',this)">
     <svg viewBox="0 0 16 16" fill="none"><circle cx="5" cy="8" r="2.5" stroke="currentColor" stroke-width="1.5"/><circle cx="11" cy="5" r="2.5" stroke="currentColor" stroke-width="1.5"/><circle cx="11" cy="11" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M7.5 7L9 6M7.5 9L9 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-    <span>Circles</span>
+    <span>Coaching</span>
   </div>
 </nav>
 
@@ -369,10 +375,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--dark
     </div>
   </div>
   <div class="sr">
-    <div class="sc"><div class="sl">Reflection streak</div><div class="sv">12<span> wks</span></div><div class="sd up">↑ longest yet</div></div>
-    <div class="sc"><div class="sl">Goals active</div><div class="sv">3<span> / 5</span></div><div class="sd">2 completed</div></div>
-    <div class="sc"><div class="sl">Avg. competency</div><div class="sv">3.8<span> / 5</span></div><div class="sd up">↑ 0.6 since Jan</div></div>
-    <div class="sc"><div class="sl">Journal entries</div><div class="sv">47</div><div class="sd">14 months</div></div>
+    <div class="sc" onclick="go('journal',null)" style="cursor:pointer"><div class="sl">Reflection streak</div><div class="sv">12<span> wks</span></div><div class="sd up">↑ longest yet</div></div>
+    <div class="sc" onclick="go('goals',null)" style="cursor:pointer"><div class="sl">Goals active</div><div class="sv">3<span> / 5</span></div><div class="sd">2 completed</div></div>
+    <div class="sc" onclick="go('competencies',null)" style="cursor:pointer"><div class="sl">Avg. competency</div><div class="sv">3.8<span> / 5</span></div><div class="sd up">↑ 0.6 since Jan</div></div>
+    <div class="sc" onclick="go('journal',null)" style="cursor:pointer"><div class="sl">Journal entries</div><div class="sv">47</div><div class="sd">14 months</div></div>
   </div>
   <div class="pc">
     <div class="pey">Today's reflection prompt</div>
@@ -694,7 +700,10 @@ function saveP(){
   document.getElementById('psv').style.display='flex';
   toast('Reflection saved ✓');
 }
-function skipP(){toast('Skipped — see you tomorrow');}
+function skipP(){
+  document.querySelector('.pc').style.display='none';
+  toast('Skipped — see you tomorrow');
+}
 
 // Goals
 function renderGoals(){
@@ -809,6 +818,9 @@ function renderAssessSliders(){
 function saveAssess(){closeM('modal-assess');renderCompGrid();toast('Self-assessment updated ✓');}
 
 // Streak
+const WEEK_DATES=[
+  'Mar 7, 2026','Mar 3, 2026','Feb 24, 2026','Feb 17, 2026','Feb 10, 2026'
+];
 function buildStreak(){
   const g=document.getElementById('sg');
   const p=[0,1,2,3,3,2,3,1,2,3,3,2,3,1,3,3,2,1,3,3,2,3,1,2,3,2,3,3,1,2,3,3,2,3,0,1,3,3,2,3,3,0,3,3,2,3,3,2,3,3,2,3];
@@ -817,8 +829,43 @@ function buildStreak(){
     if(i===51){d.classList.add('d3','today');}
     else if(i>38){const v=p[i%p.length];if(v>0)d.classList.add('d'+v);}
     else if(i>10){const v=p[i%p.length];if(v>0)d.classList.add('d'+v);}
+
+    // Map the last 5 active dots to journal entries
+    const weekBack = 51 - i; // 0 = this week, 1 = last week, etc.
+    if(weekBack < WEEK_DATES.length && d.classList.contains('d1')||
+       weekBack < WEEK_DATES.length && d.classList.contains('d2')||
+       weekBack < WEEK_DATES.length && d.classList.contains('d3')){
+      const dateRef = WEEK_DATES[weekBack];
+      if(dateRef){
+        d.style.cursor='pointer';
+        d.title = dateRef;
+        d.addEventListener('click', ()=> goToJournalEntry(dateRef));
+      }
+    }
     g.appendChild(d);
   }
+}
+
+function goToJournalEntry(dateRef){
+  go('journal', null);
+  // Wait for render then highlight
+  setTimeout(()=>{
+    const entries = document.querySelectorAll('#jl .je');
+    entries.forEach(el=>{
+      const dateel = el.querySelector('.je-date');
+      if(dateel && dateel.textContent === dateRef){
+        el.scrollIntoView({behavior:'smooth', block:'center'});
+        el.style.transition='box-shadow 0.3s, border-color 0.3s';
+        el.style.borderColor='var(--green)';
+        el.style.boxShadow='0 0 0 3px var(--g10)';
+        el.querySelector('.je-text').classList.remove('clamp');
+        setTimeout(()=>{
+          el.style.borderColor='';
+          el.style.boxShadow='';
+        }, 2500);
+      }
+    });
+  }, 80);
 }
 
 // Init
