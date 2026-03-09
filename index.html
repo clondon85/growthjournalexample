@@ -143,14 +143,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--dark
 .ccdot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.2);}
 .ccdot.on{background:var(--green);}
 
-/* ── STREAK ── */
-.sg{display:grid;grid-template-columns:repeat(13,1fr);gap:4px;margin-bottom:9px;}
-.dot{aspect-ratio:1;border-radius:3px;background:var(--d08);}
-.dot.d1{background:var(--g20);}
-.dot.d2{background:var(--g40);}
-.dot.d3{background:var(--green);}
-.dot.today{outline:2px solid var(--green);outline-offset:1px;}
-.sleg{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--d60);}
+/* ── REFLECTION BLOCKS ── */
+.rblocks-grid{display:grid;grid-template-columns:repeat(18,1fr);gap:4px;width:100%;}
+.rb{aspect-ratio:1;border-radius:3px;background:var(--d08);cursor:default;transition:transform .1s;}
+.rb.l1{background:var(--g20);}
+.rb.l2{background:var(--g40);}
+.rb.l3{background:var(--green);}
+.rb.today{outline:2px solid var(--green);outline-offset:1px;}
+.rb.clickable{cursor:pointer;}
+.rb.clickable:hover{transform:scale(1.25);z-index:2;}
+.cal-tip{position:fixed;background:var(--dark);color:var(--white);font-size:11px;padding:5px 9px;border-radius:6px;pointer-events:none;z-index:400;white-space:nowrap;display:none;}
+.sleg{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--d60);margin-top:10px;}
 .sld{display:flex;gap:3px;}
 .sldd{width:10px;height:10px;border-radius:2px;}
 
@@ -275,6 +278,19 @@ body{font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--dark
 @media (max-width: 900px) {
   .bnav{display:flex;}
 }
+/* Focus list below comp card — desktop only */
+.cc-focus-list{margin-top:14px;display:flex;flex-direction:column;gap:8px;}
+.ccfl-hd{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--d60);margin-bottom:2px;}
+.ccfl-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--white);border-radius:9px;border:1.5px solid var(--border);cursor:pointer;transition:all .15s;}
+.ccfl-item:hover{border-color:var(--g40);background:var(--g10);}
+.ccfl-factor{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.ccfl-name{font-size:13px;font-weight:500;flex:1;}
+.ccfl-bar{flex:1;height:4px;background:var(--d08);border-radius:99px;overflow:hidden;max-width:60px;}
+.ccfl-fill{height:100%;background:var(--green);border-radius:99px;}
+.ccfl-score{font-size:11px;font-weight:600;font-family:'DM Mono',monospace;color:var(--green);width:22px;text-align:right;}
+.ccfl-more{font-size:11px;color:var(--d60);text-align:center;padding-top:2px;cursor:pointer;}
+.ccfl-more:hover{color:var(--green);}
+@media(max-width:900px){.cc-focus-list{display:none!important;}}
 </style>
 </head>
 <body>
@@ -438,13 +454,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--dark
           <button class="ccbtn" onclick="nextC()">Next →</button>
         </div>
       </div>
+      <!-- Desktop-only focus list -->
+      <div id="ccFocusList" class="cc-focus-list"></div>
     </div>
     <div style="display:flex;flex-direction:column;gap:20px;">
       <div class="card">
-        <div class="ch"><div><div class="ct">Reflection rhythm</div><div class="cs">Weekly check-in activity</div></div><span class="tag">12 wks</span></div>
+        <div class="ch"><div><div class="ct">Reflection rhythm</div><div class="cs">Rolling 90 days · working days only</div></div><span class="tag">90 days</span></div>
         <div class="cb">
-          <div class="sg" id="sg"></div>
-          <div class="sleg"><span>Less</span><div class="sld"><div class="sldd" style="background:var(--d08)"></div><div class="sldd" style="background:var(--g20)"></div><div class="sldd" style="background:var(--g40)"></div><div class="sldd" style="background:var(--green)"></div></div><span>More</span></div>
+          <div class="rblocks-grid" id="rblocksWrap"></div>
+          <div class="sleg"><span>No entry</span><div class="sld"><div class="sldd" style="background:var(--d08)"></div><div class="sldd" style="background:var(--g20)"></div><div class="sldd" style="background:var(--g40)"></div><div class="sldd" style="background:var(--green)"></div></div><span>Active day</span></div>
         </div>
       </div>
       <div class="card">
@@ -785,7 +803,7 @@ function addFocus(){
   const n=COMPS[ci].name;
   if(focus.has(n)){focus.delete(n);toast(`"${n}" removed from focus areas`);}
   else{focus.add(n);if(!scores[n])scores[n]=2.5;toast(`"${n}" added to focus areas`);}
-  renderCard();renderCompGrid();
+  renderCard();renderCompGrid();renderFocusList();
 }
 
 // Competency grid
@@ -798,7 +816,7 @@ function renderCompGrid(){
     el.onclick=()=>{
       if(focus.has(c.name)){focus.delete(c.name);toast(`"${c.name}" removed from focus areas`);}
       else{focus.add(c.name);if(!scores[c.name])scores[c.name]=2.5;toast(`"${c.name}" added to focus areas`);}
-      renderCompGrid();renderCard();
+      renderCompGrid();renderCard();renderFocusList();
     };
     g.appendChild(el);
   });
@@ -817,32 +835,67 @@ function renderAssessSliders(){
 }
 function saveAssess(){closeM('modal-assess');renderCompGrid();toast('Self-assessment updated ✓');}
 
-// Streak
-const WEEK_DATES=[
-  'Mar 7, 2026','Mar 3, 2026','Feb 24, 2026','Feb 17, 2026','Feb 10, 2026'
-];
-function buildStreak(){
-  const g=document.getElementById('sg');
-  const p=[0,1,2,3,3,2,3,1,2,3,3,2,3,1,3,3,2,1,3,3,2,3,1,2,3,2,3,3,1,2,3,3,2,3,0,1,3,3,2,3,3,0,3,3,2,3,3,2,3,3,2,3];
-  for(let i=0;i<52;i++){
-    const d=document.createElement('div');d.className='dot';
-    if(i===51){d.classList.add('d3','today');}
-    else if(i>38){const v=p[i%p.length];if(v>0)d.classList.add('d'+v);}
-    else if(i>10){const v=p[i%p.length];if(v>0)d.classList.add('d'+v);}
+// Reflection rhythm — clean 90-day block grid
+function build90DayCal(){
+  const grid = document.getElementById('rblocksWrap');
+  if(!grid) return;
+  grid.innerHTML = '';
 
-    // Map the last 5 active dots to journal entries
-    const weekBack = 51 - i; // 0 = this week, 1 = last week, etc.
-    if(weekBack < WEEK_DATES.length && d.classList.contains('d1')||
-       weekBack < WEEK_DATES.length && d.classList.contains('d2')||
-       weekBack < WEEK_DATES.length && d.classList.contains('d3')){
-      const dateRef = WEEK_DATES[weekBack];
-      if(dateRef){
-        d.style.cursor='pointer';
-        d.title = dateRef;
-        d.addEventListener('click', ()=> goToJournalEntry(dateRef));
-      }
+  const today = new Date(2026, 2, 9);
+  const pat = [0,1,2,3,3,1,3,2,3,0,2,3,1,3,3,3,2,3,1,0,3,3,2,3,1,2,3,3,3,2,0,3,3,1,3,2,3,3,3,1,0,2,3,3,3,2,3,3,3,1,3,2,3,3,3,2,3,3,0,1,3,3,3,2,3,3,3,2,3];
+  let patIdx = 0;
+
+  const entryMap = {};
+  journal.forEach(e => {
+    const d = new Date(e.date);
+    if(!isNaN(d)){
+      const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      entryMap[key] = e;
     }
-    g.appendChild(d);
+  });
+
+  for(let i = 89; i >= 0; i--){
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    if(d.getDay() === 0 || d.getDay() === 6) continue; // skip weekends
+
+    const activity = pat[patIdx % pat.length];
+    patIdx++;
+
+    const block = document.createElement('div');
+    block.className = 'rb';
+    if(activity > 0) block.classList.add(`l${Math.min(activity,3)}`, 'clickable');
+
+    const isToday = d.getDate()===today.getDate() && d.getMonth()===today.getMonth();
+    if(isToday) block.classList.add('today');
+
+    const eKey = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+    const entry = entryMap[eKey];
+    const dateLabel = d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+
+    block.addEventListener('mouseenter', ev => {
+      const tip = document.getElementById('calTip');
+      tip.textContent = entry ? `${dateLabel} · ${entry.tag}` : dateLabel;
+      tip.style.display = 'block';
+      tip.style.left = (ev.clientX + 10) + 'px';
+      tip.style.top  = (ev.clientY - 28) + 'px';
+    });
+    block.addEventListener('mousemove', ev => {
+      const tip = document.getElementById('calTip');
+      tip.style.left = (ev.clientX + 10) + 'px';
+      tip.style.top  = (ev.clientY - 28) + 'px';
+    });
+    block.addEventListener('mouseleave', () => {
+      document.getElementById('calTip').style.display = 'none';
+    });
+    if(activity > 0){
+      block.addEventListener('click', () => {
+        if(entry) goToJournalEntry(entry.date);
+        else { go('journal', null); toast(`${dateLabel} — no entry saved yet`); }
+      });
+    }
+
+    grid.appendChild(block);
   }
 }
 
@@ -868,11 +921,39 @@ function goToJournalEntry(dateRef){
   }, 80);
 }
 
+// Focus list (desktop, dashboard)
+function renderFocusList(){
+  const el=document.getElementById('ccFocusList');
+  if(!el)return;
+  el.innerHTML='';
+  const focusArr=[...focus];
+  if(focusArr.length===0){el.innerHTML='<div style="font-size:12px;color:var(--d60);text-align:center;padding:8px 0;">No focus areas yet.</div>';return;}
+  const hd=document.createElement('div');hd.className='ccfl-hd';hd.textContent='Your focus areas';el.appendChild(hd);
+  focusArr.slice(0,3).forEach(name=>{
+    const comp=COMPS.find(c=>c.name===name);
+    const sc=scores[name]||0;
+    const fc=FC[comp?.factor]||'var(--green)';
+    const item=document.createElement('div');item.className='ccfl-item';
+    item.innerHTML=`<div class="ccfl-factor" style="background:${fc};"></div><div class="ccfl-name">${name}</div><div class="ccfl-bar"><div class="ccfl-fill" style="width:${(sc/5)*100}%"></div></div><div class="ccfl-score">${sc.toFixed(1)}</div>`;
+    item.onclick=()=>go('competencies',null);
+    el.appendChild(item);
+  });
+  if(focusArr.length>3){
+    const more=document.createElement('div');more.className='ccfl-more';
+    more.textContent=`+${focusArr.length-3} more · View all →`;
+    more.onclick=()=>go('competencies',null);
+    el.appendChild(more);
+  }
+}
+
 // Init
 renderCard();
 renderDashGoals();
-buildStreak();
+build90DayCal();
 renderJournal();
+renderFocusList();
 </script>
+<div class="cal-tip" id="calTip"></div>
+
 </body>
 </html>
