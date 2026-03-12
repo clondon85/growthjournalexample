@@ -531,17 +531,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--dark
 <!-- WORKSHOPS -->
 <div class="view" id="view-workshops">
   <div class="topbar"><div><div class="tb-ey">Learning events</div><div class="tb-ti">Upcoming <strong>workshops.</strong></div></div></div>
-  <div class="ws-card">
-    <div style="display:flex;gap:18px;flex-wrap:wrap;">
-      <div style="background:var(--g10);border-radius:12px;padding:14px 18px;text-align:center;flex-shrink:0;min-width:64px;"><div style="font-size:24px;font-weight:300;color:var(--green);">12</div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--green);">Mar</div></div>
-      <div style="flex:1;min-width:200px;">
-        <div style="font-size:17px;font-weight:600;margin-bottom:5px;">Own Your Growth — Full Workshop</div>
-        <div style="font-size:13px;color:var(--d60);margin-bottom:11px;">3 hours · All employees · AMS HQ + Remote</div>
-        <div style="font-size:13px;line-height:1.6;color:var(--d60);margin-bottom:14px;">A hands-on session to bring OYG to life. Set your first journal goals, complete a live competency self-assessment, and connect with peers. Bring your journal.</div>
-        <button class="btn btn-p" onclick="toast('You\'re registered for March 12 ✓')">Register →</button>
-      </div>
-    </div>
-  </div>
+  <div id="workshopList"></div>
   <div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--d60);margin-bottom:12px;">Past workshops</div>
   <div class="ws-card" style="display:flex;align-items:center;gap:14px;">
     <div style="font-size:12px;font-family:'DM Mono',monospace;color:var(--d60);min-width:58px;">Jan 2025</div>
@@ -713,6 +703,7 @@ function go(id,el){
   if(id==='goals')renderGoals();
   if(id==='journal')renderJournal();
   if(id==='competencies')renderCompGrid();
+  if(id==='workshops')renderWorkshops();
 }
 
 // Modal
@@ -826,7 +817,7 @@ function addFocus(){
   const n=COMPS[ci].name;
   if(focus.has(n)){focus.delete(n);toast(`"${n}" removed from focus areas`);}
   else{focus.add(n);if(!scores[n])scores[n]=2.5;toast(`"${n}" added to focus areas`);}
-  renderCard();renderCompGrid();renderFocusList();
+  renderCard();renderCompGrid();renderFocusList();renderWorkshops();
 }
 
 // Competency grid
@@ -860,7 +851,7 @@ function renderCompGrid(){
 function addToFocus(name){
   focus.add(name);
   if(!scores[name])scores[name]=2.5;
-  renderCompGrid();renderCard();renderFocusList();
+  renderCompGrid();renderCard();renderFocusList();renderWorkshops();
   // Auto-prompt self-assessment when first selected
   if(!preAssessed.has(name)){
     currentAssessComp=name;
@@ -870,7 +861,7 @@ function addToFocus(name){
 function removeFocus(name,e){
   e.stopPropagation();
   focus.delete(name);
-  renderCompGrid();renderCard();renderFocusList();
+  renderCompGrid();renderCard();renderFocusList();renderWorkshops();
   toast(`"${name}" removed from focus areas`);
 }
 let currentAssessComp=null;
@@ -1080,10 +1071,64 @@ function buildCompBars(){
   }, 300);
 }
 
+const registeredWorkshops=new Set();
+const WORKSHOPS=[
+  {day:'19',mon:'Mar',title:'Innovation & Accountability',meta:'3 hours · Max 20 participants · AMS HQ',comps:['Cultivates Innovation','Ensures Accountability','Decision Quality','Courage'],toast:'Registered for March 19 ✓'},
+  {day:'2',mon:'Apr',title:'People & Talent',meta:'3 hours · Max 20 participants · Remote',comps:['Drives Engagement','Attracts Top Talent','Develops Talent','Collaborates'],toast:'Registered for April 2 ✓'},
+  {day:'17',mon:'Apr',title:'Global Thinking & Strategy',meta:'3 hours · Max 20 participants · AMS HQ + Remote',comps:['Global Perspective','Strategic Mindset','Business Insight','Manages Complexity'],toast:'Registered for April 17 ✓'},
+];
+function registerWorkshop(i){
+  registeredWorkshops.add(i);
+  toast(WORKSHOPS[i].toast);
+  renderWorkshops();
+}
+function renderWorkshops(){
+  const el=document.getElementById('workshopList');
+  if(!el)return;
+  el.innerHTML='';
+  WORKSHOPS.forEach((w,wi)=>{
+    const sel=registeredWorkshops.has(wi);
+    const tags=w.comps.map(c=>{
+      const inFocus=focus.has(c);
+      return `<span style="background:${inFocus?'var(--g10)':'var(--surface)'};color:${inFocus?'var(--green)':'var(--d60)'};font-size:11px;font-weight:${inFocus?'600':'500'};padding:4px 10px;border-radius:20px;transition:background .25s,color .25s;">${inFocus?'★ ':''} ${c}</span>`;
+    }).join('');
+    const card=document.createElement('div');
+    card.className='ws-card';
+    card.style.marginBottom=wi<2?'16px':'24px';
+    if(sel){
+      card.style.borderColor='var(--green)';
+      card.style.background='linear-gradient(135deg, rgba(4,209,106,0.04) 0%, var(--white) 100%)';
+    }
+    card.innerHTML=`<div style="display:flex;gap:18px;flex-wrap:wrap;">
+      <div style="background:${sel?'var(--green)':'var(--g10)'};border-radius:12px;padding:14px 18px;text-align:center;flex-shrink:0;min-width:64px;transition:background .3s;position:relative;">
+        <div style="font-size:24px;font-weight:300;color:${sel?'var(--white)':'var(--green)'};">${w.day}</div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:${sel?'rgba(255,255,255,.8)':'var(--green)'};">${w.mon}</div>
+        ${sel?'<div style="position:absolute;top:6px;right:6px;font-size:11px;font-weight:700;color:var(--white);">✓</div>':''}
+      </div>
+      <div style="flex:1;min-width:200px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;">
+          <div style="font-size:17px;font-weight:600;">${w.title}</div>
+          ${sel?'<span style="background:var(--green);color:var(--white);font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.04em;">REGISTERED</span>':''}
+        </div>
+        <div style="font-size:13px;color:var(--d60);margin-bottom:11px;">${w.meta}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">${tags}</div>
+        ${sel
+          ? `<div style="display:flex;gap:8px;flex-wrap:wrap;">
+               <button class="btn btn-g" style="font-size:12px;cursor:default;" disabled>✓ Registered</button>
+               <button class="btn btn-g" style="font-size:12px;" onclick="toast('Added to your calendar ✓')">+ Add to calendar</button>
+             </div>`
+          : `<button class="btn btn-p" onclick="registerWorkshop(${wi})">Register →</button>`
+        }
+      </div>
+    </div>`;
+    el.appendChild(card);
+  });
+}
 build90DayCal();
 buildCompBars();
 renderJournal();
 renderFocusList();
+renderWorkshops();
 </script>
 <div class="cal-tip" id="calTip"></div>
 
