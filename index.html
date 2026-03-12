@@ -238,6 +238,20 @@ body{font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--dark
 
 /* ── WORKSHOPS / CIRCLES ── */
 .ws-card{background:var(--white);border-radius:var(--rl);border:1px solid var(--border);padding:24px 26px;margin-bottom:14px;}
+.sim-card{background:var(--white);border-radius:var(--rl);border:1px solid var(--border);padding:20px 22px;display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;transition:border-color .2s,box-shadow .2s;}
+.sim-card:hover{border-color:var(--green);box-shadow:0 2px 12px rgba(4,209,106,.08);}
+.sim-card.sim-locked{opacity:.55;cursor:default;}
+.sim-card.sim-locked:hover{border-color:var(--border);box-shadow:none;}
+.sim-comp-badge{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--green);margin-bottom:6px;}
+.sim-comp-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;}
+.sim-title{font-size:15px;font-weight:600;color:var(--dark);letter-spacing:-.01em;margin-bottom:4px;}
+.sim-desc{font-size:13px;color:var(--d60);line-height:1.55;text-align:left;}
+.sim-action{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0;}
+.sim-btn{background:var(--green);border:none;border-radius:10px;padding:9px 18px;font-size:12.5px;font-weight:600;font-family:'DM Sans',sans-serif;color:var(--dark);cursor:pointer;white-space:nowrap;transition:opacity .2s;}
+.sim-btn:hover{opacity:.85;}
+.sim-btn-locked{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:9px 18px;font-size:12.5px;font-weight:500;font-family:'DM Sans',sans-serif;color:var(--d60);cursor:default;white-space:nowrap;}
+.sim-est{font-size:11px;color:var(--d60);}
+@media(max-width:540px){.sim-card{grid-template-columns:1fr;}.sim-action{flex-direction:row;align-items:center;justify-content:space-between;}}
 
 /* ══════════════════════════════
    RESPONSIVE BREAKPOINTS
@@ -377,6 +391,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--dark
     <svg class="ni-ic" viewBox="0 0 16 16" fill="none"><circle cx="5" cy="8" r="2.5" stroke="currentColor" stroke-width="1.5"/><circle cx="11" cy="5" r="2.5" stroke="currentColor" stroke-width="1.5"/><circle cx="11" cy="11" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M7.5 7L9 6M7.5 9L9 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
     Coaching Circles
   </div>
+  <div class="ni" data-v="simulations" onclick="go('simulations',this)">
+    <svg class="ni-ic" viewBox="0 0 16 16" fill="none"><path d="M3 4l5 3-5 3V4z" fill="currentColor"/><path d="M10 5h3M10 8h2M10 11h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    Simulations
+  </div>
   <div class="sb-btm">
     <div class="ni" onclick="toggleBot()" style="padding-left:0;margin-bottom:14px;border-left:none;" id="sbBotBtn">
       <div style="width:32px;height:32px;border-radius:50%;background:var(--g20);border:1.5px solid var(--g40);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">🌱</div>
@@ -407,6 +425,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--dark
   <div class="bni" data-v="competencies" onclick="go('competencies',this)">
     <svg viewBox="0 0 16 16" fill="none"><path d="M2 12L6 7l3 3 2-2.5L14 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
     <span>Competencies</span>
+  </div>
+  <div class="bni" data-v="simulations" onclick="go('simulations',this)">
+    <svg viewBox="0 0 16 16" fill="none"><path d="M3 4l5 3-5 3V4z" fill="currentColor"/><path d="M10 5h3M10 8h2M10 11h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    <span>Simulations</span>
   </div>
   <div class="bni" onclick="toggleBot()">
     <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="6" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M3 13c0-2.21 2.24-4 5-4s5 1.79 5 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="12" cy="4" r="1.5" fill="var(--green)"/></svg>
@@ -538,6 +560,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--dark
     <div style="flex:1;font-size:13px;font-weight:500;">OYG Onboarding Introduction</div>
     <span class="tag">Attended</span>
   </div>
+</div>
+
+<!-- SIMULATIONS -->
+<div class="view" id="view-simulations">
+  <div class="topbar"><div><div class="tb-ey">Competency strengthening</div><div class="tb-ti">Scenario <strong>simulations.</strong></div></div></div>
+  <div style="font-size:13.5px;color:var(--d60);line-height:1.6;margin-bottom:24px;">Scenario-based simulations tailored to the competencies you're working on. Each one puts you in a real situation — no right answers, just better ones.</div>
+  <div id="simList" style="display:flex;flex-direction:column;gap:12px;"></div>
 </div>
 
 <!-- CIRCLES -->
@@ -703,7 +732,8 @@ function go(id,el){
   if(id==='goals')renderGoals();
   if(id==='journal')renderJournal();
   if(id==='competencies')renderCompGrid();
-  if(id==='workshops')renderWorkshops();
+  if(id==='workshops'){renderWorkshops();}
+  if(id==='simulations'){renderSims();}
 }
 
 // Modal
@@ -817,7 +847,7 @@ function addFocus(){
   const n=COMPS[ci].name;
   if(focus.has(n)){focus.delete(n);toast(`"${n}" removed from focus areas`);}
   else{focus.add(n);if(!scores[n])scores[n]=2.5;toast(`"${n}" added to focus areas`);}
-  renderCard();renderCompGrid();renderFocusList();renderWorkshops();
+  renderCard();renderCompGrid();renderFocusList();renderWorkshops();renderSims();
 }
 
 // Competency grid
@@ -851,8 +881,7 @@ function renderCompGrid(){
 function addToFocus(name){
   focus.add(name);
   if(!scores[name])scores[name]=2.5;
-  renderCompGrid();renderCard();renderFocusList();renderWorkshops();
-  // Auto-prompt self-assessment when first selected
+  renderCompGrid();renderCard();renderFocusList();renderWorkshops();renderSims();
   if(!preAssessed.has(name)){
     currentAssessComp=name;
     openAssessForSingle(name);
@@ -861,8 +890,7 @@ function addToFocus(name){
 function removeFocus(name,e){
   e.stopPropagation();
   focus.delete(name);
-  renderCompGrid();renderCard();renderFocusList();renderWorkshops();
-  toast(`"${name}" removed from focus areas`);
+  renderCompGrid();renderCard();renderFocusList();renderWorkshops();renderSims();
 }
 let currentAssessComp=null;
 function openAssessFor(name,e){
@@ -1071,6 +1099,70 @@ function buildCompBars(){
   }, 300);
 }
 
+const SIMS = [
+  {
+    comp: "Cultivates Innovation",
+    title: "The Idea Nobody Asked For",
+    desc: "A cross-functional team meeting. You've spotted an opportunity no one else has raised — but the room is skeptical and time is short. How do you create space for a new idea without derailing the agenda?",
+    est: "~12 min",
+    url: null
+  },
+  {
+    comp: "Ensures Accountability",
+    title: "The Missed Deadline",
+    desc: "A direct report has missed a commitment for the second time. They have a good reason — but so did they last time. Navigate a conversation that holds the standard without losing the relationship.",
+    est: "~10 min",
+    url: null
+  },
+  {
+    comp: "Drives Engagement",
+    title: "The Quiet Quarter",
+    desc: "Your team's output is solid but something feels flat. Contributions in meetings have dropped and one strong performer has gone quiet. How do you re-energise a team that isn't technically struggling?",
+    est: "~11 min",
+    url: null
+  },
+  {
+    comp: "Global Perspective",
+    title: "The Launch Decision",
+    desc: "A product feature is ready to ship — but feedback from one regional team flags a cultural concern the core team didn't see. The launch date is tomorrow. What do you do?",
+    est: "~10 min",
+    url: null
+  },
+  {
+    comp: "Attracts Top Talent",
+    title: "The Candidate Who Could Go Either Way",
+    desc: "Mia is a strong senior engineer — but she's weighing three offers. You're her final interview. The technical bar is high, but so is the competition. How you show up in the next 45 minutes could be the deciding factor.",
+    est: "~15 min",
+    url: "https://clondon85.github.io/oyg-simdemo/"
+  }
+];
+
+function renderSims(){
+  const el=document.getElementById('simList');
+  if(!el)return;
+  const visible=SIMS.filter(s=>focus.has(s.comp));
+  if(visible.length===0){
+    el.innerHTML=`<div style="font-size:13.5px;color:var(--d60);padding:20px 0;">Add competencies to your focus areas to unlock scenario training tailored to your goals.</div>`;
+    return;
+  }
+  el.innerHTML=visible.map(s=>{
+    const locked=!s.url;
+    return `<div class="sim-card${locked?' sim-locked':''}">
+      <div>
+        <div class="sim-comp-badge"><span class="sim-comp-dot"></span>${s.comp}</div>
+        <div class="sim-title">${s.title}</div>
+        <div class="sim-desc">${s.desc}</div>
+      </div>
+      <div class="sim-action">
+        ${locked
+          ? `<div class="sim-btn-locked">Coming soon</div><div class="sim-est">${s.est}</div>`
+          : `<button class="sim-btn" onclick="window.open('${s.url}','_blank')">Start simulation →</button><div class="sim-est">${s.est}</div>`
+        }
+      </div>
+    </div>`;
+  }).join('');
+}
+
 const registeredWorkshops=new Set();
 const WORKSHOPS=[
   {day:'19',mon:'Mar',title:'Innovation & Accountability',meta:'3 hours · Max 20 participants · AMS HQ',comps:['Cultivates Innovation','Ensures Accountability','Decision Quality','Courage'],toast:'Registered for March 19 ✓'},
@@ -1129,6 +1221,7 @@ buildCompBars();
 renderJournal();
 renderFocusList();
 renderWorkshops();
+renderSims();
 </script>
 <div class="cal-tip" id="calTip"></div>
 
