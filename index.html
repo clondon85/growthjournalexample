@@ -684,8 +684,9 @@ let journal=[
   {date:"Feb 17, 2026",tag:"Reflection",text:"Had a great 1:1 where I talked about my goals out loud for the first time. Saying them to someone else made them feel more real."},
   {date:"Feb 10, 2026",tag:"Goal update",text:"Halfway through leading the cross-team project. It's harder than expected — coordination is the real skill, not the work itself."},
 ];
-let scores={Collaborates:4.0,"Communicates Effectively":4.2,Courage:3.2,"Nimble Learning":4.5,"Ensures Accountability":3.8};
-let focus=new Set(["Collaborates","Communicates Effectively","Courage","Nimble Learning","Ensures Accountability"]);
+let scores={"Cultivates Innovation":3.0,"Ensures Accountability":3.5,"Drives Engagement":3.2,"Global Perspective":2.8};
+let focus=new Set(["Cultivates Innovation","Ensures Accountability","Drives Engagement","Global Perspective"]);
+const preAssessed=new Set(); // tracks which competencies have been self-assessed this session
 let ci=0;
 
 // Sidebar toggle
@@ -834,28 +835,93 @@ function renderCompGrid(){
   COMPS.forEach(c=>{
     const iF=focus.has(c.name);const sc=scores[c.name]||0;
     const el=document.createElement('div');el.className='cpi'+(iF?' focus':'');
-    el.innerHTML=`<div class="cpif" style="color:${FC[c.factor]||'var(--d60)'};">${c.factor}</div><div class="cpin">${c.name}</div><div class="cpid">${c.desc}</div>${iF?`<div class="cpis"><div class="cpib"><div class="cpibf" style="width:${(sc/5)*100}%"></div></div><div class="cpiv">${sc.toFixed(1)}</div></div><div style="font-size:11px;color:var(--green);font-weight:600;margin-top:6px;">★ Focus area · tap to remove</div>`:`<div style="margin-top:7px;font-size:11px;color:var(--d60);">Tap to add as focus area</div>`}`;
-    el.onclick=()=>{
-      if(focus.has(c.name)){focus.delete(c.name);toast(`"${c.name}" removed from focus areas`);}
-      else{focus.add(c.name);if(!scores[c.name])scores[c.name]=2.5;toast(`"${c.name}" added to focus areas`);}
-      renderCompGrid();renderCard();renderFocusList();
-    };
+    if(iF){
+      const sid='sv_card_'+c.name.replace(/\W/g,'_');
+      el.innerHTML=`
+        <div class="cpif" style="color:${FC[c.factor]||'var(--d60)'};">${c.factor}</div>
+        <div class="cpin">${c.name}</div>
+        <div class="cpid">${c.desc}</div>
+        <div class="cpis"><div class="cpib"><div class="cpibf" style="width:${(sc/5)*100}%"></div></div><div class="cpiv">${sc.toFixed(1)}</div></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+          <span style="font-size:11px;color:var(--green);font-weight:600;cursor:pointer;" onclick="removeFocus('${c.name}',event)">★ Focus area · tap to remove</span>
+          <button class="btn btn-g" style="font-size:11px;padding:5px 11px;" onclick="openAssessFor('${c.name}',event)">Update score</button>
+        </div>`;
+    } else {
+      el.innerHTML=`
+        <div class="cpif" style="color:${FC[c.factor]||'var(--d60)'};">${c.factor}</div>
+        <div class="cpin">${c.name}</div>
+        <div class="cpid">${c.desc}</div>
+        <div style="margin-top:7px;font-size:11px;color:var(--d60);">Tap to add as focus area</div>`;
+      el.onclick=()=>addToFocus(c.name);
+    }
     g.appendChild(el);
   });
 }
-
-// Assessment sliders
-function renderAssessSliders(){
-  const c=document.getElementById('aSliders');c.innerHTML='';
-  [...focus].forEach(name=>{
-    const s=scores[name]||2.5;
-    const id='sv_'+name.replace(/\W/g,'_');
-    const div=document.createElement('div');div.className='fg';
-    div.innerHTML=`<label class="fl">${name} — <span id="${id}" style="color:var(--green);font-family:'DM Mono',monospace;">${s.toFixed(1)}</span></label><div class="sw"><input type="range" class="sli" min="1" max="5" step="0.5" value="${s}" oninput="document.getElementById('${id}').textContent=parseFloat(this.value).toFixed(1);scores['${name}']=parseFloat(this.value);"></div>`;
-    c.appendChild(div);
-  });
+function addToFocus(name){
+  focus.add(name);
+  if(!scores[name])scores[name]=2.5;
+  renderCompGrid();renderCard();renderFocusList();
+  // Auto-prompt self-assessment when first selected
+  if(!preAssessed.has(name)){
+    currentAssessComp=name;
+    openAssessForSingle(name);
+  }
 }
-function saveAssess(){closeM('modal-assess');renderCompGrid();toast('Self-assessment updated ✓');}
+function removeFocus(name,e){
+  e.stopPropagation();
+  focus.delete(name);
+  renderCompGrid();renderCard();renderFocusList();
+  toast(`"${name}" removed from focus areas`);
+}
+let currentAssessComp=null;
+function openAssessFor(name,e){
+  if(e)e.stopPropagation();
+  currentAssessComp=name;
+  openAssessForSingle(name);
+}
+function openAssessForSingle(name){
+  // Render single-competency assessment modal
+  const c=document.getElementById('aSliders');c.innerHTML='';
+  const s=scores[name]||2.5;
+  const id='sv_'+name.replace(/\W/g,'_');
+  const div=document.createElement('div');div.className='fg';
+  div.innerHTML=`
+    <label class="fl" style="font-size:14px;font-weight:600;color:var(--dark);margin-bottom:8px;">${name}</label>
+    <div style="font-size:12px;color:var(--d60);margin-bottom:14px;">Where are you right now? Be honest — this is only visible to you.</div>
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--d60);margin-bottom:6px;"><span>Just starting</span><span>Confident</span><span>Strength</span></div>
+    <div class="sw"><input type="range" class="sli" min="1" max="5" step="0.5" value="${s}" oninput="document.getElementById('${id}').textContent=parseFloat(this.value).toFixed(1);scores['${name}']=parseFloat(this.value);"></div>
+    <div style="text-align:center;margin-top:10px;font-size:22px;font-weight:700;font-family:'DM Mono',monospace;color:var(--green);" id="${id}">${s.toFixed(1)}</div>`;
+  c.appendChild(div);
+  document.querySelector('#modal-assess .mti').textContent='Self-assessment';
+  document.querySelector('#modal-assess .msb').textContent='Rate where you feel you are right now. Only you can see this.';
+  openM('modal-assess');
+}
+function saveAssess(){
+  if(currentAssessComp)preAssessed.add(currentAssessComp);
+  closeM('modal-assess');
+  renderCompGrid();
+  // Update dashboard stats
+  const el=document.querySelector('.cpibf');if(el){const n=currentAssessComp;const s=scores[n]||0;el.style.width=(s/5*100)+'%';}
+  toast('Self-assessment saved ✓');
+  currentAssessComp=null;
+}
+
+// Assessment sliders (used by top-level "Update assessment" button)
+function renderAssessSliders(){
+  // If called from top button with no specific comp, show all focus areas
+  if(!currentAssessComp){
+    const c=document.getElementById('aSliders');c.innerHTML='';
+    document.querySelector('#modal-assess .mti').textContent='Update self-assessment';
+    document.querySelector('#modal-assess .msb').textContent='Rate where you feel you are right now. This is for you — be honest.';
+    [...focus].forEach(name=>{
+      const s=scores[name]||2.5;
+      const id='sv_'+name.replace(/\W/g,'_');
+      const div=document.createElement('div');div.className='fg';
+      div.innerHTML=`<label class="fl">${name} — <span id="${id}" style="color:var(--green);font-family:'DM Mono',monospace;">${s.toFixed(1)}</span></label><div class="sw"><input type="range" class="sli" min="1" max="5" step="0.5" value="${s}" oninput="document.getElementById('${id}').textContent=parseFloat(this.value).toFixed(1);scores['${name}']=parseFloat(this.value);"></div>`;
+      c.appendChild(div);
+    });
+  }
+}
 
 // Reflection rhythm — clean 90-day block grid
 function build90DayCal(){
@@ -977,11 +1043,10 @@ function buildCompBars(){
   if(!wrap) return;
 
   const data = [
-    {label:'Communicates Effectively', before:38, after:72},
-    {label:'Collaborates',             before:45, after:78},
-    {label:'Courage',                  before:30, after:58},
-    {label:'Being Resilient',          before:42, after:68},
-    {label:'Drives Results',           before:50, after:80},
+    {label:'Cultivates Innovation',    before:30, after:58},
+    {label:'Ensures Accountability',   before:38, after:70},
+    {label:'Drives Engagement',        before:35, after:62},
+    {label:'Global Perspective',       before:28, after:55},
   ];
 
   data.forEach(d => {
